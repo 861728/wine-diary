@@ -1,162 +1,462 @@
-<!-- ⚠️ HEAD / STYLE / UI 전부 동일 (생략 없음) -->
-<!-- 아래는 변경된 script 부분만 포함된 전체 파일 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wine Diary</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Wine Diary</title>
+    
+    <!-- 📱 Apple Touch Icon: Notion Style (White Background + Black Line Art) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22white%22/><g fill=%22none%22 stroke=%22%2337352F%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M38 35 L38 75 L62 75 L62 35 Z%22/><path d=%22M45 35 L45 22 L55 22 L55 35%22/><path d=%22M72 58 A8 8 0 1 1 56 58 Z%22/><path d=%22M64 66 L64 75 M58 75 L70 75%22/><path d=%22M42 45 L58 45 M42 53 L58 53%22 stroke-width=%222%22/></g></svg>">
+    
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+            background-color: #FFFFFF;
+            color: #37352F;
+            -webkit-font-smoothing: antialiased;
+            -webkit-user-select: none;
+            user-select: none;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+        }
+
+        h1, h2, h3, h4, p, span, div, input, textarea, button {
+            font-family: 'Pretendard', sans-serif !important;
+            letter-spacing: -0.01em;
+        }
+
+        .notion-block {
+            border: 1px solid #EDECE9;
+            border-radius: 14px;
+            background: white;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .notion-block:active { background: #F1F1EF; transform: scale(0.99); }
+
+        .notion-input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #EDECE9;
+            border-radius: 10px;
+            background: #F7F7F5;
+            outline: none;
+            font-size: 16px;
+            color: #37352F;
+            appearance: none;
+        }
+
+        .notion-input:focus { border-color: #2383E2; background: white; box-shadow: inset 0 0 0 1px #2383E2; }
+        
+        .main-content {
+            padding-bottom: 140px; 
+        }
+
+        .loader {
+            width: 28px;
+            height: 28px;
+            border: 3px solid #F1F1EF;
+            border-top: 3px solid #37352F;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        /* ✨ 하단 네비게이션 가림막 (완전 불투명) */
+        .bottom-nav-mask {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 110px;
+            background: white;
+            z-index: 40;
+        }
+
+        #root { min-height: 100vh; }
+
+        .icon-box { display: flex; align-items: center; justify-content: center; flex-shrink: 0; user-select: none; }
+        .icon-img { width: 100%; height: 100%; object-fit: contain; }
+    </style>
 </head>
-
 <body>
-<div id="root"></div>
+    <div id="root"></div>
 
-<script type="text/babel">
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
 
-const { useState, useEffect, useRef } = React;
+        // --- Configuration ---
+        const apiKey = ""; 
+        const modelName = "gemini-2.5-flash-preview-09-2025";
 
-const apiKey = "";
-const modelName = "gemini-1.5-flash";
+        // --- Constants ---
+        const WINE_TYPES = ["Red", "White", "Rose", "Sparkling"];
+        const COLOR_MAP = {
+            "White": ["Lemon", "Gold", "Amber"],
+            "Red": ["Purple", "Ruby", "Garnet"],
+            "Rose": ["Pink", "Salmon", "Onion Skin"],
+            "Sparkling": ["Pale Gold", "Deep Gold"]
+        };
+        const AROMA_CATEGORIES = {
+            "Fruit": ["Citrus", "Peach/Apricot", "Strawberry", "Cherry", "Blackberry", "Blueberry", "Pineapple"],
+            "Floral & Herbal": ["Acacia", "Rose", "Fresh Grass", "Mint", "Lavender"],
+            "Tertiary & Oak": ["Vanilla", "Toast", "Chocolate", "Coffee", "Leather", "Earth", "Smoke", "Nutty"]
+        };
+        const STRUCTURE_CONFIG = [
+            { id: "sweetness", label: "Sweetness", levels: ["Dry", "Off-Dry", "Sweet"] },
+            { id: "acidity", label: "Acidity", levels: ["Low", "Medium", "High"] },
+            { id: "tannin", label: "Tannin", levels: ["Soft", "Firm", "Harsh"] },
+            { id: "body", label: "Body", levels: ["Light", "Medium", "Full"] },
+            { id: "finish", label: "Finish", levels: ["Short", "Medium", "Long"] }
+        ];
 
-const App = () => {
+        const Icon3D = ({ name, size = 24, className = "" }) => {
+            const iconMap = {
+                database: { code: "1f4d1", char: "📑" }, wine: { code: "1f377", char: "🍷" },
+                home: { code: "1f3e0", char: "🏠" }, archive: { code: "1f4da", char: "📚" },
+                add: { code: "270f", char: "📝" }, book: { code: "1f4d6", char: "📖" },
+                history: { code: "1f552", char: "🕒" }, camera: { code: "1f4f8", char: "📸" },
+                search: { code: "1f50d", char: "🔍" }, star: { code: "2b50", char: "⭐" },
+                edit: { code: "270f", char: "✏️" }, delete: { code: "1f5d1", char: "🗑️" },
+                calendar: { code: "1f4c5", char: "📅" }, location: { code: "1f4cd", char: "📍" },
+                quote: { code: "1f4ac", char: "💬" }, arrowLeft: { code: "2b05", char: "⬅️" },
+                sparkles: { code: "2728", char: "✨" }, utensils: { code: "1f374", char: "🍴" },
+                discovery: { code: "1f9ed", char: "🧭" }, download: { code: "1f4e5", char: "📥" },
+                upload: { code: "1f4e4", char: "📤" }, tongue: { code: "1f445", char: "👅" },
+                nose: { code: "1f443", char: "👃" }, key: { code: "1f511", char: "🔑" }
+            };
+            const item = iconMap[name] || { code: "2753", char: "❓" };
+            const [imgError, setImgError] = useState(false);
+            const url = `https://fonts.gstatic.com/s/e/notoemoji/latest/${item.code}/512.webp`;
 
-const [userApiKey, setUserApiKey] = useState(localStorage.getItem('WINE_DIARY_GEMINI_KEY') || '');
-const [showKeyModal, setShowKeyModal] = useState(!localStorage.getItem('WINE_DIARY_GEMINI_KEY'));
-const [tempKey, setTempKey] = useState('');
+            return (
+                <div className={`icon-box ${className}`} style={{ width: size, height: size }}>
+                    {!imgError ? <img src={url} alt={name} className="icon-img" onError={() => setImgError(true)} /> : <span style={{ fontSize: size * 0.85 }}>{item.char}</span>}
+                </div>
+            );
+        };
 
-const [wines, setWines] = useState([]);
-const [currentWine, setCurrentWine] = useState(null);
-const [isScanning, setIsScanning] = useState(false);
+        const App = () => {
+            const [userApiKey, setUserApiKey] = useState(localStorage.getItem('WINE_DIARY_GEMINI_KEY') || '');
+            const [showKeyModal, setShowKeyModal] = useState(!localStorage.getItem('WINE_DIARY_GEMINI_KEY'));
+            const [tempKey, setTempKey] = useState('');
 
-const activeKey = apiKey || userApiKey;
+            const [wines, setWines] = useState([]);
+            const [view, setView] = useState('dashboard');
+            const [currentWine, setCurrentWine] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [isScanning, setIsScanning] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+            
+            const backupFileRef = useRef(null);
+            const fileInputRef = useRef(null);
 
-/* ===========================
-   ✅ FIXED fetchGemini
-=========================== */
-const fetchGemini = async (prompt, isImage=false, base64=null) => {
+            const activeKey = apiKey || userApiKey;
 
-    if (!activeKey) {
-        setShowKeyModal(true);
-        return "{}";
-    }
+            useEffect(() => {
+                const localData = localStorage.getItem('WINE_DIARY_STORAGE_FINAL_MASTER_V13');
+                if (localData) { try { setWines(JSON.parse(localData)); } catch (e) {} }
+                setIsLoading(false);
+            }, []);
 
-    const url =
-`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
+            useEffect(() => {
+                if (!isLoading) localStorage.setItem('WINE_DIARY_STORAGE_FINAL_MASTER_V13', JSON.stringify(wines));
+            }, [wines, isLoading]);
 
-    const parts = [{ text: prompt }];
+            const fetchGemini = async (prompt, isImage = false, base64 = null) => {
+                if (!activeKey) { setShowKeyModal(true); return "{}"; }
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
+                
+                const parts = [{ text: prompt }];
+                if (isImage && base64) {
+                    const mimeType = base64.split(';')[0].split(':')[1];
+                    const data = base64.split(',')[1];
+                    parts.push({ inlineData: { mimeType, data } });
+                }
 
-    if (isImage && base64) {
-        const mimeType = base64.split(';')[0].split(':')[1];
-        const data = base64.split(',')[1];
-        parts.push({
-            inlineData: { mimeType, data }
-        });
-    }
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ role: "user", parts }] }) 
+                });
+                
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const result = await response.json();
+                return result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            };
 
-    const response = await fetch(url,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-            contents:[{role:"user",parts}]
-        })
-    });
+            const handlePasteKey = async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    setTempKey(text);
+                } catch (err) {
+                    alert("Please long-press the box to paste manually due to browser security policy.");
+                }
+            };
 
-    const text = await response.text();
+            const handleBackupExport = () => {
+                const data = JSON.stringify(wines, null, 2);
+                const blob = new Blob([data], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `wine_diary_backup.json`; a.click();
+            };
 
-    if(!response.ok){
-        console.log(text);
-        throw new Error(`API Error: ${response.status}`);
-    }
+            const handleBackupImport = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        if (Array.isArray(importedData)) { setWines(importedData); alert("Restore Complete!"); }
+                    } catch (err) { alert("Invalid file."); }
+                };
+                reader.readAsText(file);
+                e.target.value = null;
+            };
 
-    const result = JSON.parse(text);
+            const handleSaveKey = () => {
+                if (tempKey.trim()) {
+                    localStorage.setItem('WINE_DIARY_GEMINI_KEY', tempKey.trim());
+                    setUserApiKey(tempKey.trim());
+                    setShowKeyModal(false);
+                }
+            };
 
-    return result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-};
+            const handleScan = async (base64) => {
+                setIsScanning(true);
+                try {
+                    const prompt = "Analyze this wine label. Return JSON only: {name, producer, vintage, variety, region}. Use English.";
+                    const jsonText = await fetchGemini(prompt, true, base64);
+                    const data = JSON.parse(jsonText.match(/\{[\s\S]*\}/)[0]);
+                    
+                    setCurrentWine(prev => ({ 
+                        ...prev, 
+                        ...data,
+                        imageUrl: base64 
+                    }));
+                } catch (e) { 
+                    alert("Scan failed. Ensure API key is valid and image is clear."); 
+                } finally { setIsScanning(false); }
+            };
 
+            const handleSave = () => {
+                if (!currentWine?.name) return;
+                if (currentWine.id) setWines(wines.map(w => w.id === currentWine.id ? currentWine : w));
+                else setWines([{ ...currentWine, id: Date.now().toString(), createdAt: Date.now() }, ...wines]);
+                setView('list');
+            };
 
-/* ===========================
-   ✅ FIXED handleScan
-=========================== */
-const handleScan = async (base64) => {
+            if (isLoading) return <div className="h-screen flex items-center justify-center bg-white"><div className="loader"></div></div>;
 
-    setIsScanning(true);
+            return (
+                <div className="min-h-screen bg-white">
+                    {/* --- API Key Modal (RESTORED) --- */}
+                    {showKeyModal && (
+                        <div className="modal-overlay">
+                            <div className="w-full max-w-sm p-8 notion-block bg-white shadow-2xl space-y-6 text-left">
+                                <div className="flex flex-col items-center gap-3 text-center">
+                                    <Icon3D name="key" size={48} />
+                                    <h2 className="text-xl font-bold">API Key Setup</h2>
+                                    <p className="text-[11px] text-stone-400 px-2 leading-relaxed">Required for AI Label Scanning.<br/>Saved locally on this device.</p>
+                                </div>
+                                <div className="space-y-3">
+                                    <input className="notion-input" type="text" placeholder="Enter key here..." value={tempKey} onChange={(e) => setTempKey(e.target.value)} />
+                                    <button onClick={handlePasteKey} className="w-full py-3 bg-blue-50 text-[#2383E2] rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        Paste from Clipboard
+                                    </button>
+                                </div>
+                                <button onClick={handleSaveKey} className="w-full py-4 bg-[#37352F] text-white rounded-xl font-bold active:scale-95 transition-all">Start Journey</button>
+                                <button onClick={() => setShowKeyModal(false)} className="w-full text-[10px] font-bold text-stone-300 uppercase tracking-widest text-center">Later</button>
+                            </div>
+                        </div>
+                    )}
 
-    try {
+                    <main className="max-w-md mx-auto px-6 pt-16 main-content">
+                        {/* --- DASHBOARD --- */}
+                        {view === 'dashboard' && (
+                            <div className="space-y-12 animate-in fade-in">
+                                <header className="space-y-2 text-left">
+                                    <div className="flex items-center gap-3"><Icon3D name="database" size={36} /><h1 className="text-3xl font-bold tracking-tight text-[#37352F]">Wine Diary</h1></div>
+                                    <p className="text-xs text-stone-400 font-bold uppercase tracking-[0.1em] ml-1">Archive for the aspiring wine lover.</p>
+                                </header>
+                                
+                                <div className="space-y-4">
+                                    <div className="p-6 notion-block flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-5 text-left">
+                                            <div className="w-14 h-14 bg-stone-50 rounded-xl flex items-center justify-center shadow-inner"><Icon3D name="wine" size={40} /></div>
+                                            <div><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Cellar Size</p><p className="text-3xl font-bold text-[#37352F] text-left">{wines.length}</p></div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div onClick={() => setView('list')} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors text-left"><Icon3D name="book" size={32} /><span className="text-sm font-bold text-[#37352F]">Archive Index</span></div>
+                                        <div onClick={() => { if(wines.length > 0) { setCurrentWine(wines[0]); setView('detail'); }}} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors text-left"><Icon3D name="history" size={32} /><span className="text-sm font-bold text-[#37352F]">Latest Entry</span></div>
+                                    </div>
+                                    <div onClick={() => { setCurrentWine({ name: '', producer: '', vintage: '', variety: '', region: '', type: 'Red', color: '', aromas: [], structure: { sweetness: 0, acidity: 0, tannin: 0, body: 0, finish: 0 }, date: new Date().toISOString().split('T')[0], rating: 5, comment: '', imageUrl: null }); setView('edit'); }} className="p-14 notion-block bg-[#F7F7F5] border-dashed border-2 cursor-pointer flex flex-col items-center justify-center gap-4 active:bg-stone-200 transition-colors text-center"><Icon3D name="camera" size={56} /><p className="text-[11px] font-bold text-stone-500 uppercase tracking-widest text-center">New Page</p></div>
+                                </div>
 
-        const prompt = `
-Analyze this wine label image.
+                                {/* --- APP MANAGEMENT (RESTORED) --- */}
+                                <div className="flex items-center justify-between pt-10 border-t border-stone-100 px-1">
+                                    <h3 className="text-[10px] font-black text-stone-300 uppercase tracking-widest whitespace-nowrap">App Management</h3>
+                                    <div className="flex items-center gap-4">
+                                        <button onClick={() => setShowKeyModal(true)} className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded transition-colors ${activeKey ? 'text-[#2383E2] bg-blue-50' : 'text-stone-400 bg-stone-50'}`}>Key</button>
+                                        <button onClick={handleBackupExport} className="text-[10px] font-bold text-stone-400 flex items-center gap-1 uppercase">Backup</button>
+                                        <button onClick={() => backupFileRef.current.click()} className="text-[10px] font-bold text-stone-400 flex items-center gap-1 uppercase">Restore</button>
+                                        <input type="file" ref={backupFileRef} className="hidden" accept=".json" onChange={handleBackupImport} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-Return ONLY valid JSON.
-No explanation.
-No markdown.
-No text outside JSON.
+                        {/* --- LIST VIEW --- */}
+                        {view === 'list' && (
+                            <div className="space-y-8 animate-in fade-in text-left">
+                                <header className="flex justify-between items-center px-1"><h2 className="text-2xl font-bold text-[#37352F] flex items-center gap-3"><Icon3D name="archive" size={28} /> Archive</h2><button onClick={() => setView('dashboard')} className="text-xs font-bold text-stone-400 uppercase tracking-widest">Back</button></header>
+                                <div className="relative"><div className="absolute left-4 top-1/2 -translate-y-1/2"><Icon3D name="search" size={20} /></div><input className="notion-input pl-12" placeholder="Search archive..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
+                                <div className="divide-y divide-stone-100">
+                                    {wines.filter(w => w.name.toLowerCase().includes(searchTerm.toLowerCase())).map((wine) => (
+                                        <div key={wine.id} onClick={() => { setCurrentWine(wine); setView('detail'); }} className="py-5 flex items-center gap-5 cursor-pointer hover:bg-stone-50 px-2 transition-colors rounded-xl text-left">
+                                            <div className="w-16 h-16 bg-stone-50 rounded-lg border border-stone-100 flex items-center justify-center overflow-hidden shrink-0">{wine.imageUrl ? <img src={wine.imageUrl} className="w-full h-full object-cover" /> : <Icon3D name="wine" size={32} />}</div>
+                                            <div className="flex-1 min-w-0"><p className="text-base font-bold text-[#37352F] truncate">{wine.name}</p><p className="text-xs text-stone-400 font-medium truncate uppercase">{wine.variety} · {wine.vintage || 'NV'}</p></div>
+                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-stone-50 rounded-md"><Icon3D name="star" size={14} /><span className="text-xs font-bold text-[#37352F]">{wine.rating}</span></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-Format:
-{
-  "name":"",
-  "producer":"",
-  "vintage":"",
-  "variety":"",
-  "region":""
-}
-`;
+                        {/* --- DETAIL VIEW --- */}
+                        {view === 'detail' && currentWine && (
+                            <div className="space-y-10 animate-in fade-in pb-10 text-left">
+                                <header className="flex justify-between items-center px-1"><button onClick={() => setView('list')} className="text-xs font-bold text-[#2383E2] flex items-center gap-3 uppercase tracking-widest hover:underline">Index</button><div className="flex gap-6"><div className="cursor-pointer" onClick={() => setView('edit')}><Icon3D name="edit" size={28} /></div><div className="cursor-pointer" onClick={() => { if(confirm('Delete?')) { setWines(wines.filter(w => w.id !== currentWine.id)); setView('list'); } }}><Icon3D name="delete" size={28} /></div></div></header>
+                                <div className="space-y-12">
+                                    <div className="w-full aspect-square bg-stone-50 rounded-3xl overflow-hidden border border-stone-100 shadow-sm">{currentWine.imageUrl ? <img src={currentWine.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-stone-50"><Icon3D name="wine" size={100} /></div>}</div>
+                                    <div className="space-y-2 px-1 text-left">
+                                        <div className="flex items-center gap-2 mb-1"><span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${currentWine.type === 'Red' ? 'bg-red-500' : currentWine.type === 'White' ? 'bg-yellow-400' : currentWine.type === 'Rose' ? 'bg-pink-400' : 'bg-blue-400'}`}>{currentWine.type}</span><span className="text-[10px] font-bold text-stone-300 uppercase">{currentWine.color}</span></div>
+                                        <h2 className="text-4xl font-bold leading-tight text-[#37352F]">{currentWine.name}</h2>
+                                        <p className="text-lg text-stone-400 font-medium">{currentWine.producer || 'Unknown'}</p>
+                                    </div>
 
-        const jsonText = await fetchGemini(prompt,true,base64);
+                                    {/* ✨ 테이스팅 정보 표시부 */}
+                                    <div className="border-y border-stone-100 divide-y divide-stone-100 px-1 text-left">
+                                        {[ { label: 'Date', icon: 'calendar', value: currentWine.date }, { label: 'Region', icon: 'location', value: currentWine.region || '-' } ].map((item, idx) => (
+                                            <div key={idx} className="flex items-center py-5"><div className="w-36 text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-3"><Icon3D name={item.icon} size={22} /> {item.label}</div><div className={`flex-1 text-sm font-semibold text-[#37352F]`}>{item.value}</div></div>
+                                        ))}
+                                        <div className="py-5 text-left"><div className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-3 mb-3 text-left"><Icon3D name="nose" size={22} /> Aroma</div><div className="flex flex-wrap gap-2 text-left">{currentWine.aromas?.length > 0 ? currentWine.aromas.map(a => <span key={a} className="px-3 py-1 bg-stone-100 text-[#37352F] text-[11px] font-bold rounded-full">{a}</span>) : <span className="text-stone-300 text-[11px] italic">No aromas recorded.</span>}</div></div>
+                                        <div className="py-5 text-left"><div className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-3 mb-4 text-left"><Icon3D name="tongue" size={22} /> Structure</div><div className="grid grid-cols-2 gap-x-8 gap-y-4 text-left">{STRUCTURE_CONFIG.map(s => (<div key={s.id} className="flex justify-between items-center text-[13px] text-left"><span className="text-stone-400 font-bold uppercase tracking-tighter">{s.label}</span><span className="font-bold text-[#37352F]">{s.levels[currentWine.structure?.[s.id] || 0]}</span></div>))}</div></div>
+                                    </div>
 
-        const clean = jsonText
-            .replace(/```json/g,'')
-            .replace(/```/g,'')
-            .trim();
+                                    <div className="p-8 bg-[#F7F7F5] rounded-3xl border border-stone-100 relative overflow-hidden text-left"><div className="absolute -top-4 -right-4 opacity-10"><Icon3D name="quote" size={100} /></div><p className="text-lg leading-relaxed text-stone-700 font-medium italic relative z-10 text-left">"{currentWine.comment || 'No tasting notes recorded.'}"</p></div>
+                                </div>
+                            </div>
+                        )}
 
-        const data = JSON.parse(clean);
+                        {/* --- EDIT VIEW --- */}
+                        {view === 'edit' && currentWine && (
+                            <div className="space-y-6 animate-in fade-in pb-24 text-left">
+                                <div className="space-y-6 px-1 pt-2">
+                                    <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-[4/3] bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group text-center">
+                                        {currentWine.imageUrl ? <img src={currentWine.imageUrl} className="w-full h-full object-cover" /> : <><Icon3D name="camera" size={64} className="mb-4" /><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest text-center">Scan label</p></>}
+                                        {isScanning && <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-20"><div className="loader"></div></div>}
+                                        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={e => { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onloadend = () => handleScan(r.result); r.readAsDataURL(f); } }} />
+                                    </div>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2 text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 text-left">Wine Name</label><input className="notion-input font-bold text-lg text-[#37352F]" value={currentWine.name} onChange={e => setCurrentWine({...currentWine, name: e.target.value})} placeholder="Title..." /></div>
+                                        <div className="grid grid-cols-2 gap-4 text-left">
+                                            <div className="space-y-2 text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 text-left">Year</label><input className="notion-input" value={currentWine.vintage} onChange={e => setCurrentWine({...currentWine, vintage: e.target.value})} placeholder="Vintage" /></div>
+                                            <div className="space-y-2 text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 text-left">Grape</label><input className="notion-input" value={currentWine.variety} onChange={e => setCurrentWine({...currentWine, variety: e.target.value})} placeholder="Grape" /></div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* ✨ 테이스팅 입력부 */}
+                                    <div className="space-y-6 pt-4 border-t border-stone-100 text-left">
+                                        <div className="flex justify-between items-end text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Type & Color</label><select className="text-[11px] font-bold text-stone-400 bg-transparent outline-none" value={currentWine.type} onChange={e => setCurrentWine({...currentWine, type: e.target.value, color: ''})}>{WINE_TYPES.map(t => <option key={t} value={t}>{t} Wine</option>)}</select></div>
+                                        <div className="flex flex-wrap gap-2 text-left">{COLOR_MAP[currentWine.type].map(c => (<button key={c} onClick={() => setCurrentWine({...currentWine, color: c})} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${currentWine.color === c ? 'bg-[#37352F] text-white border-[#37352F]' : 'bg-white text-stone-400 border-stone-100'}`}>{c}</button>))}</div>
+                                    </div>
+                                    <div className="space-y-6 pt-4 border-t border-stone-100 text-left">
+                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Aroma Profile</label>
+                                        {Object.entries(AROMA_CATEGORIES).map(([cat, items]) => (
+                                            <div key={cat} className="space-y-2 text-left">
+                                                <p className="text-[10px] font-bold text-stone-300 italic px-1 text-left">{cat}</p>
+                                                <div className="flex flex-wrap gap-2 text-left">{items.map(item => (<button key={item} onClick={() => { const aroms = currentWine.aromas || []; setCurrentWine({...currentWine, aromas: aroms.includes(item) ? aroms.filter(a => a !== item) : [...aroms, item]}); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${currentWine.aromas?.includes(item) ? 'bg-blue-50 text-[#2383E2] border-[#2383E2]' : 'bg-white text-stone-400 border-stone-50'}`}>{item}</button>))}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="space-y-8 pt-4 border-t border-stone-100 text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 text-left">Palate & Structure</label>{STRUCTURE_CONFIG.map(s => (<div key={s.id} className="space-y-2 text-left"><div className="flex justify-between text-[10px] font-bold"><span className="text-stone-400 uppercase">{s.label}</span><span className="text-[#2383E2]">{s.levels[currentWine.structure?.[s.id] || 0]}</span></div><div className="flex gap-1 bg-stone-50 p-1 rounded-xl text-left">{s.levels.map((level, idx) => (<button key={level} onClick={() => setCurrentWine({...currentWine, structure: {...currentWine.structure, [s.id]: idx}})} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${currentWine.structure?.[s.id] === idx ? 'bg-white text-[#37352F] shadow-sm' : 'text-stone-300'}`}>{idx + 1}</button>))}</div></div>))}</div>
+                                    
+                                    <div className="space-y-3 pt-4 border-t border-stone-100 text-left"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 text-left">Note</label><textarea className="notion-input h-32 resize-none text-base" value={currentWine.comment} onChange={e => setCurrentWine({...currentWine, comment: e.target.value})} placeholder="Experience..." /></div>
+                                    <div className="space-y-4 pt-4 text-left"><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Star Rating</span><span className="text-xl font-bold text-[#37352F]">{currentWine.rating}/10</span></div><div className="flex gap-1.5 text-left">{[...Array(10)].map((_, i) => <button key={i} onClick={() => setCurrentWine({...currentWine, rating: i+1})} className={`flex-1 h-10 rounded-lg transition-all ${currentWine.rating >= i+1 ? 'bg-[#37352F]' : 'bg-stone-100'} active:scale-90`} />)}</div></div>
+                                    <button onClick={handleSave} className="w-full py-6 bg-[#37352F] text-white rounded-2xl font-bold text-xl active:bg-black transition-colors shadow-xl">Archive Record</button>
+                                    <button onClick={() => setView('dashboard')} className="w-full py-4 text-stone-300 text-xs font-bold uppercase tracking-widest text-center">Cancel Recording</button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
 
-        setCurrentWine(prev=>({
-            ...prev,
-            ...data,
-            imageUrl:base64
-        }));
+                    {/* ✨ 하단 정보 투과 방지 가림막 */}
+                    <div className="bottom-nav-mask"></div>
 
-    } catch(e){
-        alert("Scan failed. Ensure API key is valid and image is clear.");
-        console.error(e);
-    }
+                    {/* ✨ 하단 네비게이션 바 (FIXED & FITTED LAYOUT) */}
+                    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full flex justify-center">
+                        <div className="bg-white/95 backdrop-blur-md border border-stone-200 px-8 py-4 rounded-full flex items-center gap-14 shadow-[0_20px_40px_rgba(0,0,0,0.15)] overflow-hidden">
+                            <button onClick={() => setView('dashboard')} className="active:opacity-50 transition-opacity p-1">
+                                <Icon3D name="home" size={32} />
+                            </button>
+                            <button onClick={() => setView('list')} className="active:opacity-50 transition-opacity p-1">
+                                <Icon3D name="archive" size={32} />
+                            </button>
+                            <div className="w-[1px] h-6 bg-stone-200" />
+                            <button 
+                                onClick={() => { setCurrentWine({ name: '', producer: '', vintage: '', variety: '', region: '', type: 'Red', color: '', aromas: [], structure: { sweetness: 0, acidity: 0, tannin: 0, body: 0, finish: 0 }, date: new Date().toISOString().split('T')[0], rating: 5, comment: '', imageUrl: null }); setView('edit'); }} 
+                                className="active:opacity-50 transition-opacity p-1"
+                            >
+                                <Icon3D name="add" size={32} />
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
 
-    setIsScanning(false);
-};
-
-
-return (
-<div className="p-10">
-<h1 className="text-2xl font-bold mb-4">Wine Diary Test</h1>
-
-<input type="file"
-accept="image/*"
-onChange={e=>{
-const f=e.target.files[0];
-if(!f)return;
-const r=new FileReader();
-r.onloadend=()=>handleScan(r.result);
-r.readAsDataURL(f);
-}}/>
-
-{currentWine && (
-<pre className="mt-6 bg-gray-100 p-4 rounded">
-{JSON.stringify(currentWine,null,2)}
-</pre>
-)}
-</div>
-);
-};
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App/>);
-
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
