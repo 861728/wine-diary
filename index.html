@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Wine Diary</title>
+
+    <!-- 📱 아이폰 홈 화면 아이콘: 노션 스타일 (화이트 배경 + 검정 라인 아트) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22white%22/><g fill=%22none%22 stroke=%22%2337352F%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M38 35 L38 75 L62 75 L62 35 Z%22/><path d=%22M45 35 L45 22 L55 22 L55 35%22/><path d=%22M72 58 A8 8 0 1 1 56 58 Z%22/><path d=%22M64 66 L64 75 M58 75 L70 75%22/><path d=%22M42 45 L58 45 M42 53 L58 53%22 stroke-width=%222%22/></g></svg>">
     
     <!-- Fonts -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -28,18 +31,16 @@
             background-color: #FFFFFF;
             color: #37352F;
             -webkit-font-smoothing: antialiased;
-            /* 기본적으로 텍스트 선택 방지 (앱 느낌) */
             -webkit-user-select: none;
             user-select: none;
             margin: 0;
             overflow-x: hidden;
         }
         
-        /* 🔥 붙여넣기 및 선택 문제 해결: 입력창에서는 모든 제한 해제 */
         input, textarea, [contenteditable="true"] {
             -webkit-user-select: text !important;
             user-select: text !important;
-            -webkit-touch-callout: default !important; /* 길게 눌렀을 때 메뉴 띄우기 */
+            -webkit-touch-callout: default !important;
         }
 
         h1, h2, h3, h4, p, span, div, input, textarea, button {
@@ -106,7 +107,6 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- constants ---
         const WINE_TYPES = ["Red", "White", "Rose", "Sparkling"];
         const COLOR_MAP = {
             "White": ["Lemon", "Gold", "Amber"],
@@ -259,7 +259,7 @@
             if (isLoading) return <div className="h-screen flex items-center justify-center bg-white"><div className="loader"></div></div>;
 
             return (
-                <div className="min-h-screen bg-white">
+                <div className="min-h-screen bg-white text-[#37352F]">
                     {/* --- Key Modal --- */}
                     {showKeyModal && (
                         <div className="modal-overlay">
@@ -281,7 +281,7 @@
                         {view === 'dashboard' && (
                             <div className="space-y-12 animate-in fade-in">
                                 <header className="space-y-2">
-                                    <div className="flex items-center gap-3"><Icon3D name="database" size={36} /><h1 className="text-3xl font-bold tracking-tight text-[#37352F]">Wine Diary</h1></div>
+                                    <div className="flex items-center gap-3"><Icon3D name="database" size={36} /><h1 className="text-3xl font-bold tracking-tight">Wine Diary</h1></div>
                                     <p className="text-xs text-stone-400 font-bold uppercase tracking-[0.1em] ml-1">For the aspiring wine lover, not the sommelier.</p>
                                 </header>
                                 
@@ -289,17 +289,16 @@
                                     <div className="p-6 notion-block flex items-center justify-between shadow-sm">
                                         <div className="flex items-center gap-5">
                                             <div className="w-14 h-14 bg-stone-50 rounded-xl flex items-center justify-center shadow-inner"><Icon3D name="wine" size={40} /></div>
-                                            <div><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Cellar Size</p><p className="text-3xl font-bold text-[#37352F]">{wines.length}</p></div>
+                                            <div><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Cellar Size</p><p className="text-3xl font-bold">{wines.length}</p></div>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div onClick={() => setView('list')} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors"><Icon3D name="book" size={32} /><span className="text-sm font-bold text-[#37352F]">Archive Index</span></div>
-                                        <div onClick={() => { if(wines.length > 0) { setCurrentWine(wines[0]); setAiPairing(null); setAiRecommendation(null); setView('detail'); }}} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors"><Icon3D name="history" size={32} /><span className="text-sm font-bold text-[#37352F]">Latest Entry</span></div>
+                                        <div onClick={() => setView('list')} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors"><Icon3D name="book" size={32} /><span className="text-sm font-bold">Archive Index</span></div>
+                                        <div onClick={() => { if(wines.length > 0) { setCurrentWine(wines[0]); setAiPairing(null); setAiRecommendation(null); setView('detail'); }}} className="p-6 notion-block cursor-pointer flex flex-col gap-4 active:bg-stone-50 transition-colors"><Icon3D name="history" size={32} /><span className="text-sm font-bold">Latest Entry</span></div>
                                     </div>
                                     <div onClick={() => { setCurrentWine({ name: '', producer: '', vintage: '', variety: '', region: '', type: 'Red', color: '', aromas: [], structure: { sweetness: 0, acidity: 0, tannin: 0, body: 0, finish: 0 }, date: new Date().toISOString().split('T')[0], rating: 5, comment: '', imageUrl: null }); setAiPairing(null); setAiRecommendation(null); setView('edit'); }} className="p-14 notion-block bg-[#F7F7F5] border-dashed border-2 cursor-pointer flex flex-col items-center justify-center gap-4 active:bg-stone-200 transition-colors"><Icon3D name="camera" size={56} /><p className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">New Page</p></div>
                                 </div>
 
-                                {/* --- SETTINGS AREA (Single Line) --- */}
                                 <div className="flex items-center justify-between pt-10 border-t border-stone-100 px-1">
                                     <h3 className="text-[10px] font-black text-stone-300 uppercase tracking-widest whitespace-nowrap">App Management</h3>
                                     <div className="flex items-center gap-4">
@@ -309,21 +308,21 @@
                                         <input type="file" ref={backupFileRef} className="hidden" accept=".json" onChange={handleBackupImport} />
                                     </div>
                                 </div>
-                                <div className="text-center -mt-8"><span className="text-[9px] font-bold text-stone-200 tracking-tighter uppercase">Ver 1.0.2 Paste-Fix</span></div>
+                                <div className="text-center -mt-8"><span className="text-[9px] font-bold text-stone-200 tracking-tighter uppercase">Ver 1.0.3 Notion Icon Fix</span></div>
                             </div>
                         )}
 
                         {/* --- LIST VIEW --- */}
                         {view === 'list' && (
                             <div className="space-y-8 animate-in fade-in">
-                                <header className="flex justify-between items-center px-1"><h2 className="text-2xl font-bold text-[#37352F] flex items-center gap-3"><Icon3D name="archive" size={28} /> Archive</h2><button onClick={() => setView('dashboard')} className="text-xs font-bold text-stone-400 uppercase tracking-widest">Back</button></header>
+                                <header className="flex justify-between items-center px-1"><h2 className="text-2xl font-bold flex items-center gap-3"><Icon3D name="archive" size={28} /> Archive</h2><button onClick={() => setView('dashboard')} className="text-xs font-bold text-stone-400 uppercase tracking-widest">Back</button></header>
                                 <div className="relative"><div className="absolute left-4 top-1/2 -translate-y-1/2"><Icon3D name="search" size={20} /></div><input className="notion-input pl-12" placeholder="Search records..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
                                 <div className="divide-y divide-stone-100">
                                     {wines.filter(w => w.name.toLowerCase().includes(searchTerm.toLowerCase())).map((wine) => (
                                         <div key={wine.id} onClick={() => { setCurrentWine(wine); setAiPairing(null); setAiRecommendation(null); setView('detail'); }} className="py-5 flex items-center gap-5 cursor-pointer hover:bg-stone-50 px-2 transition-colors rounded-xl">
                                             <div className="w-16 h-16 bg-stone-50 rounded-lg border border-stone-100 flex items-center justify-center overflow-hidden shrink-0">{wine.imageUrl ? <img src={wine.imageUrl} className="w-full h-full object-cover" /> : <Icon3D name="wine" size={32} />}</div>
-                                            <div className="flex-1 min-w-0"><p className="text-base font-bold text-[#37352F] truncate">{wine.name}</p><p className="text-xs text-stone-400 font-medium truncate uppercase">{wine.variety} · {wine.vintage || 'NV'}</p></div>
-                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-stone-50 rounded-md"><Icon3D name="star" size={14} /><span className="text-xs font-bold text-[#37352F]">{wine.rating}</span></div>
+                                            <div className="flex-1 min-w-0"><p className="text-base font-bold truncate">{wine.name}</p><p className="text-xs text-stone-400 font-medium truncate uppercase">{wine.variety} · {wine.vintage || 'NV'}</p></div>
+                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-stone-50 rounded-md"><Icon3D name="star" size={14} /><span className="text-xs font-bold">{wine.rating}</span></div>
                                         </div>
                                     ))}
                                 </div>
@@ -338,15 +337,15 @@
                                     <div className="w-full aspect-square bg-stone-50 rounded-3xl overflow-hidden border border-stone-100 shadow-sm">{currentWine.imageUrl ? <img src={currentWine.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-stone-50"><Icon3D name="wine" size={100} /></div>}</div>
                                     <div className="space-y-2 px-1">
                                         <div className="flex items-center gap-2 mb-1"><span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${currentWine.type === 'Red' ? 'bg-red-500' : currentWine.type === 'White' ? 'bg-yellow-400' : currentWine.type === 'Rose' ? 'bg-pink-400' : 'bg-blue-400'}`}>{currentWine.type}</span><span className="text-[10px] font-bold text-stone-300">{currentWine.color}</span></div>
-                                        <h2 className="text-4xl font-bold leading-tight text-[#37352F]">{currentWine.name}</h2>
+                                        <h2 className="text-4xl font-bold leading-tight">{currentWine.name}</h2>
                                         <p className="text-lg text-stone-400 font-medium">{currentWine.producer || 'Unknown'}</p>
                                     </div>
                                     <div className="border-y border-stone-100 divide-y divide-stone-100 px-1">
                                         {[ { label: 'Date', icon: 'calendar', value: currentWine.date }, { label: 'Region', icon: 'location', value: currentWine.region || '-' } ].map((item, idx) => (
-                                            <div key={idx} className="flex items-center py-5"><div className="w-36 text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-4"><Icon3D name={item.icon} size={22} /> {item.label}</div><div className={`flex-1 text-sm font-semibold text-[#37352F]`}>{item.value}</div></div>
+                                            <div key={idx} className="flex items-center py-5"><div className="w-36 text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-4"><Icon3D name={item.icon} size={22} /> {item.label}</div><div className={`flex-1 text-sm font-semibold`}>{item.value}</div></div>
                                         ))}
                                         <div className="py-5"><div className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-4 mb-3"><Icon3D name="nose" size={22} /> Aroma</div><div className="flex flex-wrap gap-2">{currentWine.aromas?.length > 0 ? currentWine.aromas.map(a => <span key={a} className="px-3 py-1 bg-stone-100 text-[#37352F] text-[11px] font-bold rounded-full">{a}</span>) : <span className="text-stone-300 text-[11px] italic">No aromas.</span>}</div></div>
-                                        <div className="py-5"><div className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-4 mb-4"><Icon3D name="tongue" size={22} /> Structure</div><div className="grid grid-cols-2 gap-x-8 gap-y-4">{STRUCTURE_CONFIG.map(s => (<div key={s.id} className="flex justify-between items-center text-[13px]"><span className="text-stone-400 font-bold uppercase tracking-tighter">{s.label}</span><span className="font-bold text-[#37352F]">{s.levels[currentWine.structure?.[s.id] || 0]}</span></div>))}</div></div>
+                                        <div className="py-5"><div className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-4 mb-4"><Icon3D name="tongue" size={22} /> Structure</div><div className="grid grid-cols-2 gap-x-8 gap-y-4">{STRUCTURE_CONFIG.map(s => (<div key={s.id} className="flex justify-between items-center text-[13px]"><span className="text-stone-400 font-bold uppercase tracking-tighter">{s.label}</span><span className="font-bold">{s.levels[currentWine.structure?.[s.id] || 0]}</span></div>))}</div></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button onClick={async () => { setIsGenerating(true); try { const text = await fetchGemini(`Pairing for ${currentWine.name}. Short sentence.`); setAiPairing(text); } catch (e) { alert(e.message); } finally { setIsGenerating(false); } }} className="p-5 notion-block flex flex-col items-center gap-3 ai-glow active:bg-blue-50 transition-colors"><Icon3D name="utensils" size={32} /><span className="text-[10px] font-bold text-[#2383E2] uppercase tracking-widest">✨ Pairing</span></button>
@@ -369,7 +368,7 @@
                                         <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={e => { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onloadend = () => handleScan(r.result); r.readAsDataURL(f); } }} />
                                     </div>
                                     <div className="space-y-8">
-                                        <div className="space-y-3"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Title</label><input className="notion-input font-bold text-lg text-[#37352F]" value={currentWine.name} onChange={e => setCurrentWine({...currentWine, name: e.target.value})} placeholder="Wine name..." /></div>
+                                        <div className="space-y-3"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Title</label><input className="notion-input font-bold text-lg" value={currentWine.name} onChange={e => setCurrentWine({...currentWine, name: e.target.value})} placeholder="Wine name..." /></div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-3"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Year</label><input className="notion-input" value={currentWine.vintage} onChange={e => setCurrentWine({...currentWine, vintage: e.target.value})} placeholder="Vintage" /></div>
                                             <div className="space-y-3"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Grape</label><input className="notion-input" value={currentWine.variety} onChange={e => setCurrentWine({...currentWine, variety: e.target.value})} placeholder="Grape" /></div>
@@ -390,7 +389,7 @@
                                     </div>
                                     <div className="space-y-8 pt-4 border-t border-stone-100"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Palate & Structure</label>{STRUCTURE_CONFIG.map(s => (<div key={s.id} className="space-y-2"><div className="flex justify-between text-[10px] font-bold"><span className="text-stone-400 uppercase">{s.label}</span><span className="text-[#2383E2]">{s.levels[currentWine.structure?.[s.id] || 0]}</span></div><div className="flex gap-1 bg-stone-50 p-1 rounded-xl">{s.levels.map((level, idx) => (<button key={level} onClick={() => setCurrentWine({...currentWine, structure: {...currentWine.structure, [s.id]: idx}})} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${currentWine.structure?.[s.id] === idx ? 'bg-white text-[#37352F] shadow-sm' : 'text-stone-300'}`}>{idx + 1}</button>))}</div></div>))}</div>
                                     <div className="space-y-3 pt-4 border-t border-stone-100"><label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Note</label><textarea className="notion-input h-32 resize-none text-base" value={currentWine.comment} onChange={e => setCurrentWine({...currentWine, comment: e.target.value})} placeholder="Experience..." /></div>
-                                    <div className="space-y-4 pt-4"><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Star Rating</span><span className="text-xl font-bold text-[#37352F]">{currentWine.rating}/10</span></div><div className="flex gap-1.5">{[...Array(10)].map((_, i) => <button key={i} onClick={() => setCurrentWine({...currentWine, rating: i+1})} className={`flex-1 h-10 rounded-lg transition-all ${currentWine.rating >= i+1 ? 'bg-[#37352F]' : 'bg-stone-100'} active:scale-90`} />)}</div></div>
+                                    <div className="space-y-4 pt-4"><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Star Rating</span><span className="text-xl font-bold">{currentWine.rating}/10</span></div><div className="flex gap-1.5">{[...Array(10)].map((_, i) => <button key={i} onClick={() => setCurrentWine({...currentWine, rating: i+1})} className={`flex-1 h-10 rounded-lg transition-all ${currentWine.rating >= i+1 ? 'bg-[#37352F]' : 'bg-stone-100'} active:scale-90`} />)}</div></div>
                                     <button onClick={handleSave} className="w-full py-6 bg-[#37352F] text-white rounded-2xl font-bold text-xl active:bg-black transition-colors shadow-xl">Archive Record</button>
                                 </div>
                             </div>
@@ -402,7 +401,7 @@
                             <button onClick={() => { setAiPairing(null); setAiRecommendation(null); setView('dashboard'); }} className="active:opacity-50 p-1 transition-opacity"><Icon3D name="home" size={32} /></button>
                             <button onClick={() => { setAiPairing(null); setAiRecommendation(null); setView('list'); }} className="active:opacity-50 p-1 transition-opacity"><Icon3D name="archive" size={32} /></button>
                             <div className="w-[1px] h-6 bg-stone-200" />
-                            <button onClick={() => { setCurrentWine({ name: '', producer: '', vintage: '', variety: '', region: '', type: 'Red', color: '', aromas: [], structure: { sweetness: 0, acidity: 0, tannin: 0, body: 0, finish: 0 }, date: new Date().toISOString().split('T')[0], rating: 5, comment: '', imageUrl: null }); setView('edit'); }} className="active:opacity-50 p-1 transition-opacity"><Icon3D name="add" size={32} /></button>
+                            <button onClick={() => { setCurrentWine({ name: '', producer: '', vintage: '', variety: '', region: '', type: 'Red', color: '', aromas: [], structure: { sweetness: 0, acidity: 0, tannin: 0, body: 0, finish: 0 }, date: new Date().toISOString().split('T')[0], rating: 5, comment: '', imageUrl: null }); setAiPairing(null); setAiRecommendation(null); setView('edit'); }} className="active:opacity-50 p-1 transition-opacity"><Icon3D name="add" size={32} /></button>
                         </div>
                     </nav>
                 </div>
